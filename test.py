@@ -12,6 +12,11 @@ def framebuffer_callback(window, width, height):
 def process_input(window):
   if glfw.get_key(window, glfw.KEY_ESCAPE) == glfw.PRESS:
     glfw.set_window_should_close(window, True)
+  if glfw.get_key(window, glfw.KEY_G) == glfw.PRESS:
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
+  if glfw.get_key(window, glfw.KEY_F) == glfw.PRESS:
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+    
  
  
 def main():
@@ -26,9 +31,17 @@ def main():
   glfw.make_context_current(window)
   glfw.set_framebuffer_size_callback(window, framebuffer_callback)
   
-  vertices = np.array([-0.5, -0.5, 0.0, 
-              0.5, -0.5, 0.0, 
-              0.0,  0.5, 0.0], dtype=np.float32)
+  vertices = np.array([
+    0.5, 0.5, 0.0, 
+    0.5, -0.5, 0.0, 
+    -0.5,  -0.5, 0.0,
+    -0.5, 0.5, 0.0
+  ], dtype=np.float32)
+  
+  indices = np.array([
+    0, 1, 3,
+    1, 2, 3
+  ], dtype=np.uint32)
   
   
   VERTEX_SHADER = """
@@ -59,29 +72,34 @@ def main():
   
   shader = OpenGL.GL.shaders.compileProgram(vs_compiled, fs_compiled)
   
+  glDeleteShader(vs_compiled)
+  glDeleteShader(fs_compiled)
+  
   glUseProgram(shader)
   
   #Create Buffer object in gpu
   VBO = glGenBuffers(1)
   VAO = glGenVertexArrays(1)
+  EBO = glGenBuffers(1)
   
   glBindVertexArray(VAO)
 
   #Bind the buffer
   glBindBuffer(GL_ARRAY_BUFFER, VBO)
-  glBufferData(GL_ARRAY_BUFFER, sys.getsizeof(vertices), vertices, GL_STATIC_DRAW)
+  glBufferData(GL_ARRAY_BUFFER, vertices.nbytes, vertices, GL_STATIC_DRAW)
 
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO)
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.nbytes, indices, GL_STATIC_DRAW)
 
 
   #get the position from vertex shader
   position = glGetAttribLocation(shader, 'position')
-  glVertexAttribPointer(position, 3, GL_FLOAT, GL_FALSE, 0, ctypes.c_void_p(0))
-  glEnableVertexAttribArray(position)
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, ctypes.c_void_p(0))
+  glEnableVertexAttribArray(0)
   
   glBindBuffer(GL_ARRAY_BUFFER, 0)
   
-  glBindVertexArray(0)
-  
+  glBindVertexArray(0)  
   
   while not glfw.window_should_close(window):
     
@@ -94,7 +112,9 @@ def main():
     glUseProgram(shader)
     glBindVertexArray(VAO)
     
-    glDrawArrays(GL_TRIANGLES, 0, 3)
+    #glDrawArrays(GL_TRIANGLES, 0, 3)
+    glDrawElements(GL_TRIANGLES, len(indices), GL_UNSIGNED_INT, None)
+    #glBindVertexArray(0)
     
     glfw.swap_buffers(window)
     
