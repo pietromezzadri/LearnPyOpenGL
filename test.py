@@ -94,8 +94,8 @@ def main():
 
   #get the position from vertex shader
   position = glGetAttribLocation(shader, 'position')
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, ctypes.c_void_p(0))
-  glEnableVertexAttribArray(0)
+  glVertexAttribPointer(position, 3, GL_FLOAT, GL_FALSE, 0, ctypes.c_void_p(0))
+  glEnableVertexAttribArray(position)
   
   glBindBuffer(GL_ARRAY_BUFFER, 0)
   
